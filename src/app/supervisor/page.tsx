@@ -1,6 +1,8 @@
 import { redirect } from "next/navigation";
 import { getSessionUser, getRoleLandingPath } from "@/lib/auth";
+import { Role } from "@/generated/prisma/enums";
 import { LogoutButton } from "@/app/logout-button";
+import { SupervisorWorkspace } from "./supervisor-workspace";
 
 export default async function SupervisorPage() {
   const user = await getSessionUser();
@@ -9,23 +11,33 @@ export default async function SupervisorPage() {
     redirect("/login");
   }
 
-  if (user.role !== "cutting_supervisor") {
+  if (user.role !== Role.cutting_supervisor) {
     redirect(getRoleLandingPath(user.role));
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-6 text-gray-900">
-      <div className="w-full max-w-md bg-white border border-gray-200 rounded-lg p-6 shadow-sm flex flex-col gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-gray-900">Cutting Supervisor Terminal</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            Logged in as <span className="font-semibold text-gray-900">{user.fullName}</span>
-          </p>
-          <p className="text-xs text-gray-500 mt-0.5">Role: {user.role}</p>
-        </div>
-        <div className="pt-2 border-t border-gray-200 flex justify-end">
+    <main className="min-h-screen bg-gray-50 p-6 text-gray-900">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-6">
+        <header className="flex items-center justify-between rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">
+              Cutting Supervisor Terminal
+            </h1>
+
+            <p className="mt-1 text-sm text-gray-600">
+              Logged in as{" "}
+              <span className="font-semibold text-gray-900">
+                {user.fullName}
+              </span>
+            </p>
+
+            <p className="mt-0.5 text-xs text-gray-500">Role: {user.role}</p>
+          </div>
+
           <LogoutButton />
-        </div>
+        </header>
+
+        <SupervisorWorkspace />
       </div>
     </main>
   );

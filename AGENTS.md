@@ -99,7 +99,7 @@ Build to these. Do not decide them again.
 
 ## 7. Data model
 
-Tables: `users`, `recipes`, `recipe_components`, `cutting_orders`, `verification_items`, `verification_logs`. Fields and relations are exactly as in the assessment spec, section 8. Add only what is needed (for example `submitted_at`, `sewing_started_by`).
+Tables: `users`, `recipes`, `recipe_components`, `cutting_orders`, `verification_items`, `verification_logs`. Fields and relations are exactly as in the assessment spec, section 8. Do not add columns that no requirement asks for. The only approved addition is `verification_logs.variances` (a JSON snapshot of the counts at decision time).
 
 - `verification_items.status` is derived on the server from expected and actual. Never accept it from the client.
 - Add database constraints: `target_qty > 0`, `actual_qty >= 0`, status enums, foreign keys, unique `order_no`.
@@ -189,3 +189,13 @@ Keep `AI_LOG.md` as work happens. For each flaw: what the AI produced, why it wa
 - Stay inside the scope in section 1.
 - Write the prompt, get approval, then code.
 - Run the checks and share exact test steps.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

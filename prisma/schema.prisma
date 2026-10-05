@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -11,4 +5,119 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum Role {
+  cutting_supervisor
+  cutting_verifier
+  sewing_supervisor
+}
+
+enum OrderStatus {
+  CUTTING_IN_PROGRESS
+  PENDING_VERIFICATION
+  REJECTED
+  VERIFIED
+  IN_SEWING
+}
+
+enum ItemStatus {
+  GREEN
+  YELLOW
+  RED
+}
+
+enum Decision {
+  APPROVED
+  REJECTED
+}
+
+model User {
+  id           Int               @id @default(autoincrement())
+  email        String            @unique
+  passwordHash String            @map("password_hash")
+  role         Role
+  fullName     String            @map("full_name")
+  createdAt    DateTime          @default(now()) @map("created_at")
+  cuttingOrders CuttingOrder[]
+  verificationLogs VerificationLog[]
+
+  @@map("users")
+}
+
+model Recipe {
+  id             Int               @id @default(autoincrement())
+  recipeCode     String            @unique @map("recipe_code")
+  name           String
+  category       String
+  stdFabricYards Decimal           @map("std_fabric_yards") @db.Decimal(6, 2)
+  wastageCap     Decimal           @map("wastage_cap") @db.Decimal(5, 2)
+  components     RecipeComponent[]
+  cuttingOrders  CuttingOrder[]
+
+  @@map("recipes")
+}
+
+model RecipeComponent {
+  id                Int                @id @default(autoincrement())
+  recipeId          Int                @map("recipe_id")
+  componentName     String             @map("component_name")
+  piecesPerGarment  Int                @map("pieces_per_garment")
+  imageUrl          String?            @map("image_url")
+  recipe            Recipe             @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  verificationItems VerificationItem[]
+
+  @@map("recipe_components")
+}
+
+model CuttingOrder {
+  id                Int                @id @default(autoincrement())
+  orderNo           String             @unique @map("order_no")
+  recipeId          Int                @map("recipe_id")
+  targetQty         Int                @map("target_qty")
+  fabricRollId      String             @map("fabric_roll_id")
+  actualFabricYds   Decimal            @map("actual_fabric_yds") @db.Decimal(8, 2)
+  status            OrderStatus        @default(CUTTING_IN_PROGRESS)
+  createdBy         Int                @map("created_by")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  recipe            Recipe             @relation(fields: [recipeId], references: [id], onDelete: Restrict)
+  creator           User               @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+  verificationItems VerificationItem[]
+  verificationLogs  VerificationLog[]
+
+  @@index([status])
+  @@index([createdBy])
+  @@map("cutting_orders")
+}
+
+model VerificationItem {
+  id          Int             @id @default(autoincrement())
+  orderId     Int             @map("order_id")
+  componentId Int             @map("component_id")
+  expectedQty Int             @map("expected_qty")
+  actualQty   Int?            @map("actual_qty")
+  status      ItemStatus?
+  order       CuttingOrder    @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  component   RecipeComponent @relation(fields: [componentId], references: [id], onDelete: Restrict)
+
+  @@unique([orderId, componentId])
+  @@index([orderId])
+  @@map("verification_items")
+}
+
+model VerificationLog {
+  id            Int          @id @default(autoincrement())
+  orderId       Int          @map("order_id")
+  verifierId    Int          @map("verifier_id")
+  decision      Decision
+  rejectionNote String?      @map("rejection_note")
+  wastagePct    Decimal?     @map("wastage_pct") @db.Decimal(6, 2)
+  variances     Json
+  timestamp     DateTime     @default(now())
+  order         CuttingOrder @relation(fields: [orderId], references: [id], onDelete: Restrict)
+  verifier      User         @relation(fields: [verifierId], references: [id], onDelete: Restrict)
+
+  @@index([orderId])
+  @@map("verification_logs")
 }

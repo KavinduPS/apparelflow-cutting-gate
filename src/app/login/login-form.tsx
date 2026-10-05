@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { getRoleLandingPath } from "@/lib/auth";
 import type { Role } from "@/generated/prisma/enums";
 
 interface DemoPersona {
@@ -30,6 +29,19 @@ const DEMO_PERSONAS: DemoPersona[] = [
 ];
 
 const DEMO_PASSWORD = "Demo@1234";
+
+function getRoleDestination(role: Role): string {
+  switch (role) {
+    case "cutting_supervisor":
+      return "/supervisor";
+    case "cutting_verifier":
+      return "/verifier";
+    case "sewing_supervisor":
+      return "/sewing";
+    default:
+      return "/";
+  }
+}
 
 export function LoginForm() {
   const router = useRouter();
@@ -66,7 +78,7 @@ export function LoginForm() {
         return;
       }
 
-      const destination = getRoleLandingPath(data.role as Role);
+      const destination = getRoleDestination(data.role as Role);
       router.push(destination);
       router.refresh();
     } catch {

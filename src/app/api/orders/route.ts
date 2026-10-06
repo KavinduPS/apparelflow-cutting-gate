@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireRole } from "@/lib/auth";
-import { OrderStatus, Role } from "@/generated/prisma/enums";
+import { OrderStatus, Role, Decision } from "@/generated/prisma/enums";
 import { createOrderSchema } from "@/lib/validation/order";
 import { prisma } from "@/db/client";
 import {
@@ -26,6 +26,19 @@ export async function GET() {
           name: true,
         },
       },
+      verificationLogs: {
+        where: {
+          decision: Decision.REJECTED,
+        },
+        orderBy: {
+          timestamp: "desc",
+        },
+        take: 1,
+        select: {
+          rejectionNote: true,
+          timestamp: true,
+        },
+      },
     },
   });
 
@@ -40,6 +53,8 @@ export async function GET() {
       fabricRollId: order.fabricRollId,
       actualFabricYds: Number(order.actualFabricYds),
       createdAt: order.createdAt,
+      rejectionNote: order.verificationLogs[0]?.rejectionNote ?? null,
+      rejectedAt: order.verificationLogs[0]?.timestamp ?? null,
     })),
   });
 }

@@ -28,6 +28,8 @@ type CuttingOrder = {
   fabricRollId: string;
   actualFabricYds: number;
   createdAt: string;
+  rejectionNote: string | null;
+  rejectedAt: string | null;
 };
 
 export function SupervisorWorkspace() {
@@ -48,6 +50,10 @@ export function SupervisorWorkspace() {
   const [orders, setOrders] = useState<CuttingOrder[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [ordersError, setOrdersError] = useState("");
+
+  const [resubmittingOrderId, setResubmittingOrderId] = useState<number | null>(
+    null,
+  );
 
   useEffect(() => {
     async function loadOrders() {
@@ -177,6 +183,73 @@ export function SupervisorWorkspace() {
     }
   }
 
+  async function handleSubmitForVerification(orderId: number) {
+    try {
+      const response = await fetch(`/api/orders/${orderId}/submit`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to submit order");
+      }
+
+      setOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                status: data.order.status,
+              }
+            : order,
+        ),
+      );
+    } catch (error) {
+      console.error(error);
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Unable to submit order for verification.",
+      );
+    }
+  }
+
+  async function handleResubmit(orderId: number) {
+    setResubmittingOrderId(orderId);
+
+    try {
+      const response = await fetch(`/api/orders/${orderId}/resubmit`, {
+        method: "POST",
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to resubmit order");
+      }
+
+      setOrders((currentOrders) =>
+        currentOrders.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                status: data.order.status,
+              }
+            : order,
+        ),
+      );
+    } catch (error) {
+      console.error(error);
+
+      alert(
+        error instanceof Error ? error.message : "Unable to resubmit order.",
+      );
+    } finally {
+      setResubmittingOrderId(null);
+    }
+  }
+
   return (
     <section className="w-full max-w-6xl space-y-6">
       <div className="flex items-center justify-between">
@@ -224,17 +297,25 @@ export function SupervisorWorkspace() {
                   <th className="px-6 py-3 font-semibold text-gray-900">
                     Order
                   </th>
+
                   <th className="px-6 py-3 font-semibold text-gray-900">
                     Recipe
                   </th>
+
                   <th className="px-6 py-3 font-semibold text-gray-900">
                     Quantity
                   </th>
+
                   <th className="px-6 py-3 font-semibold text-gray-900">
                     Fabric Roll
                   </th>
+
                   <th className="px-6 py-3 font-semibold text-gray-900">
                     Status
+                  </th>
+
+                  <th className="px-6 py-3 font-semibold text-gray-900">
+                    Actions
                   </th>
                 </tr>
               </thead>
@@ -259,9 +340,53 @@ export function SupervisorWorkspace() {
                     </td>
 
                     <td className="px-6 py-4">
-                      <span className="font-semibold text-gray-900">
+                      <span
+                        className={`rounded-md px-2.5 py-1 text-xs font-bold ${
+                          order.status === "REJECTED"
+                            ? "bg-red-100 text-red-800"
+                            : order.status === "VERIFIED"
+                              ? "bg-green-100 text-green-800"
+                              : order.status === "PENDING_VERIFICATION"
+                                ? "bg-yellow-100 text-yellow-800"
+                                : order.status === "IN_SEWING"
+                                  ? "bg-blue-100 text-blue-800"
+                                  : "bg-gray-100 text-gray-800"
+                        }`}
+                      >
                         {order.status}
                       </span>
+
+                      {order.status === "REJECTED" && order.rejectionNote && (
+                        <p className="mt-2 max-w-xs text-xs text-red-700">
+                          <span className="font-semibold">Reason:</span>{" "}
+                          {order.rejectionNote}
+                        </p>
+                      )}
+                    </td>
+
+                    <td className="px-6 py-4">
+                      {order.status === "CUTTING_IN_PROGRESS" ? (
+                        <button
+                          type="button"
+                          onClick={() => handleSubmitForVerification(order.id)}
+                          className="rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800"
+                        >
+                          Submit for Verification
+                        </button>
+                      ) : order.status === "REJECTED" ? (
+                        <button
+                          type="button"
+                          onClick={() => handleResubmit(order.id)}
+                          disabled={resubmittingOrderId === order.id}
+                          className="rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+                        >
+                          {resubmittingOrderId === order.id
+                            ? "Returning..."
+                            : "Return to Cutting"}
+                        </button>
+                      ) : (
+                        <span className="text-sm text-gray-500">No action</span>
+                      )}
                     </td>
                   </tr>
                 ))}

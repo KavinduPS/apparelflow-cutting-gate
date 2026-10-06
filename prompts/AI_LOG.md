@@ -7,3 +7,7 @@ Prisma setup flaws (AI suggested setup commands and config)
 Auth and client component bundling flaws:
 
 - Client component (`src/app/login/login-form.tsx`) imported `getRoleLandingPath` from `src/lib/auth.ts`. Because `auth.ts` imported `@/db/client` (which uses `@prisma/adapter-pg` and Node `pg`), Turbopack attempted to bundle Node native modules (`net`, `tls`, `fs`) into client bundle, causing build failure. Fix: decoupled client navigation mapping in `login-form.tsx` and eliminated server module imports from client components.
+
+Planning API endpoints
+
+Handling what happens in supervisor workspace when a order is rejected by verifier

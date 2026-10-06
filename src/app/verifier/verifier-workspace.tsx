@@ -45,7 +45,6 @@ export function VerifierWorkspace() {
   );
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
   const [queueError, setQueueError] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
@@ -224,12 +223,18 @@ export function VerifierWorkspace() {
     }
 
     if (!decision) {
-      setError("Please select Approve or Reject.");
+      setToast({
+        type: "error",
+        message: "Please select Approve or Reject.",
+      });
       return;
     }
 
     if (decision === "REJECTED" && !rejectionNote.trim()) {
-      setError("A rejection reason is required.");
+      setToast({
+        type: "error",
+        message: "A rejection reason is required.",
+      });
       return;
     }
 
@@ -239,7 +244,6 @@ export function VerifierWorkspace() {
     }));
 
     setSubmitting(true);
-    setError("");
 
     try {
       const response = await fetch(
@@ -280,11 +284,13 @@ export function VerifierWorkspace() {
       setDecision(null);
       setRejectionNote("");
     } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Unable to submit verification.",
-      );
+      setToast({
+        type: "error",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Unable to submit verification.",
+      });
     } finally {
       setSubmitting(false);
     }
@@ -294,7 +300,7 @@ export function VerifierWorkspace() {
     <>
       {toast && (
         <div
-          role="status"
+          role={toast.type === "error" ? "alert" : "status"}
           className={`fixed right-6 top-6 z-50 rounded-lg border px-5 py-4 shadow-lg ${
             toast.type === "success"
               ? "border-green-300 bg-green-50 text-green-800"
@@ -331,7 +337,6 @@ export function VerifierWorkspace() {
                     setActualQuantities({});
                     setDecision(null);
                     setRejectionNote("");
-                    setError("");
                   }}
                   className={`w-full rounded-md border p-4 text-left transition ${
                     selectedOrderId === order.id
@@ -353,15 +358,6 @@ export function VerifierWorkspace() {
             </div>
           )}
         </div>
-
-        {error && (
-          <div
-            role="alert"
-            className="rounded-md border border-red-300 bg-red-50 p-4 text-sm font-medium text-red-800"
-          >
-            {error}
-          </div>
-        )}
 
         <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           {!selectedOrder ? (

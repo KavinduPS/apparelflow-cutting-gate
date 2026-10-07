@@ -140,6 +140,13 @@ export function VerifierWorkspace() {
       };
     }
 
+    if (actualQty > item.expectedQty) {
+      return {
+        status: "YELLOW",
+        label: "EXCESS",
+      };
+    }
+
     return {
       status: "GREEN",
       label: "OK",
@@ -644,6 +651,10 @@ export function VerifierWorkspace() {
                       <button
                         type="button"
                         onClick={() => setDecision("APPROVED")}
+                        disabled={
+                          !getVerificationSummary(selectedOrder).canApprove ||
+                          submitting
+                        }
                         className={`rounded-md px-4 py-2 text-sm font-semibold ${
                           decision === "APPROVED"
                             ? "bg-green-700 text-white"

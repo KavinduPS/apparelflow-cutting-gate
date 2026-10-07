@@ -162,6 +162,8 @@ export async function POST(request: Request, context: RouteContext) {
       status = ItemStatus.RED;
     } else if (actualQty < expectedQty) {
       status = ItemStatus.RED;
+    } else if (actualQty > expectedQty) {
+      status = ItemStatus.YELLOW;
     } else {
       status = ItemStatus.GREEN;
     }

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { GET } from "./route";
 import { requireRole } from "@/lib/auth";
 import { prisma } from "@/db/client";
+import { ItemStatus, OrderStatus } from "@/generated/prisma/enums";
 
 vi.mock("@/lib/auth", () => ({
   requireRole: vi.fn(),
@@ -67,17 +68,41 @@ describe("GET /api/orders/sewing-queue", () => {
 
     vi.mocked(prisma.cuttingOrder.findMany).mockResolvedValue([
       {
-        id: 15,
-        orderNo: "CUT-0015",
-        status: "VERIFIED",
-        targetQty: 50,
-        fabricRollId: "ROLL-001",
-        actualFabricYds: 90,
-        updatedAt: new Date("2026-10-07T01:00:00.000Z"),
+        id: 1,
+        orderNo: "CUT-0001",
+        status: OrderStatus.VERIFIED,
+        targetQty: 100,
+        fabricRollId: "ROLL-01",
+        actualFabricYds: 180,
+        updatedAt: new Date(),
+
         recipe: {
           recipeCode: "REC-BL01",
           name: "Casual Blouse",
         },
+
+        verificationItems: [
+          {
+            componentId: 1,
+            expectedQty: 100,
+            actualQty: 100,
+            status: ItemStatus.GREEN,
+            component: {
+              componentName: "Front Panel",
+            },
+          },
+        ],
+
+        verificationLogs: [
+          {
+            timestamp: new Date("2026-10-06T10:00:00Z"),
+            wastagePct: 3.25,
+            verifier: {
+              id: 2,
+              fullName: "Test Verifier",
+            },
+          },
+        ],
       },
     ] as never);
 
@@ -90,17 +115,32 @@ describe("GET /api/orders/sewing-queue", () => {
     expect(data).toEqual({
       orders: [
         {
-          id: 15,
-          orderNo: "CUT-0015",
+          id: 1,
+          orderNo: "CUT-0001",
           status: "VERIFIED",
-          targetQty: 50,
-          fabricRollId: "ROLL-001",
-          actualFabricYds: 90,
+          targetQty: 100,
+          fabricRollId: "ROLL-01",
+          actualFabricYds: 180,
           recipe: {
             recipeCode: "REC-BL01",
             name: "Casual Blouse",
           },
-          verifiedAt: "2026-10-07T01:00:00.000Z",
+          verificationItems: [
+            {
+              componentId: 1,
+              componentName: "Front Panel",
+              expectedQty: 100,
+              actualQty: 100,
+              status: "GREEN",
+            },
+          ],
+          verification: {
+            verifierId: 2,
+            verifierName: "Test Verifier",
+            verifiedAt: "2026-10-06T10:00:00.000Z",
+            wastagePct: 3.25,
+          },
+          verifiedAt: "2026-10-06T10:00:00.000Z",
         },
       ],
     });
@@ -117,6 +157,35 @@ describe("GET /api/orders/sewing-queue", () => {
           select: {
             recipeCode: true,
             name: true,
+          },
+        },
+        verificationItems: {
+          include: {
+            component: {
+              select: {
+                componentName: true,
+              },
+            },
+          },
+          orderBy: {
+            componentId: "asc",
+          },
+        },
+        verificationLogs: {
+          where: {
+            decision: "APPROVED",
+          },
+          orderBy: {
+            timestamp: "desc",
+          },
+          take: 1,
+          include: {
+            verifier: {
+              select: {
+                id: true,
+                fullName: true,
+              },
+            },
           },
         },
       },

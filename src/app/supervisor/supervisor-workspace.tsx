@@ -45,6 +45,9 @@ export function SupervisorWorkspace() {
   const [actualFabricYds, setActualFabricYds] = useState("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submittingOrderId, setSubmittingOrderId] = useState<number | null>(
+    null,
+  );
   const [submitError, setSubmitError] = useState("");
 
   const [orders, setOrders] = useState<CuttingOrder[]>([]);
@@ -184,15 +187,17 @@ export function SupervisorWorkspace() {
   }
 
   async function handleSubmitForVerification(orderId: number) {
+    setSubmittingOrderId(orderId);
+
     try {
       const response = await fetch(`/api/orders/${orderId}/submit`, {
         method: "POST",
       });
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to submit order");
+        throw new Error(data?.error || "Failed to submit order");
       }
 
       setOrders((currentOrders) =>
@@ -212,9 +217,10 @@ export function SupervisorWorkspace() {
           ? error.message
           : "Unable to submit order for verification.",
       );
+    } finally {
+      setSubmittingOrderId(null);
     }
   }
-
   async function handleResubmit(orderId: number) {
     setResubmittingOrderId(orderId);
 
@@ -264,7 +270,7 @@ export function SupervisorWorkspace() {
         <button
           type="button"
           onClick={() => setIsCreateOrderOpen(true)}
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2"
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-gray-900 focus:ring-offset-2 cursor-pointer"
         >
           Create Order
         </button>
@@ -369,16 +375,19 @@ export function SupervisorWorkspace() {
                         <button
                           type="button"
                           onClick={() => handleSubmitForVerification(order.id)}
-                          className="rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800"
+                          disabled={submittingOrderId === order.id}
+                          className="rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400 cursor-pointer"
                         >
-                          Submit for Verification
+                          {submittingOrderId === order.id
+                            ? "Submitting..."
+                            : "Submit for Verification"}
                         </button>
                       ) : order.status === "REJECTED" ? (
                         <button
                           type="button"
                           onClick={() => handleResubmit(order.id)}
                           disabled={resubmittingOrderId === order.id}
-                          className="rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+                          className="rounded-md bg-blue-700 px-3 py-2 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400 cursor-pointer"
                         >
                           {resubmittingOrderId === order.id
                             ? "Returning..."
@@ -421,7 +430,7 @@ export function SupervisorWorkspace() {
               <button
                 type="button"
                 onClick={closeModal}
-                className="rounded-md px-2 py-1 text-sm font-semibold text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                className="rounded-md px-2 py-1 text-sm font-semibold text-gray-600 hover:bg-gray-100 hover:text-gray-900 cursor-pointer"
                 aria-label="Close create order dialog"
               >
                 ✕
@@ -614,7 +623,7 @@ export function SupervisorWorkspace() {
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  className="rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 cursor-pointer"
                 >
                   Cancel
                 </button>
@@ -622,7 +631,7 @@ export function SupervisorWorkspace() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting ? "Creating..." : "Create Order"}
                 </button>

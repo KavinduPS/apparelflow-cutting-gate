@@ -190,7 +190,7 @@ describe("POST /api/orders/[id]/verification", () => {
       params: Promise.resolve({ id: "1" }),
     });
 
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(422);
 
     const data = await response.json();
 
@@ -390,7 +390,7 @@ describe("POST /api/orders/[id]/verification", () => {
       params: Promise.resolve({ id: "1" }),
     });
 
-    expect(response.status).toBe(409);
+    expect(response.status).toBe(422);
 
     const data = await response.json();
 

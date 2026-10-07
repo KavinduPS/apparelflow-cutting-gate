@@ -345,7 +345,7 @@ export function VerifierWorkspace() {
                     setDecision(null);
                     setRejectionNote("");
                   }}
-                  className={`w-full rounded-md border p-4 text-left transition ${
+                  className={`w-full rounded-md border p-4 text-left transition cursor-pointer ${
                     selectedOrderId === order.id
                       ? "border-blue-600 bg-blue-50"
                       : "border-gray-200 bg-white hover:border-gray-400"
@@ -655,7 +655,7 @@ export function VerifierWorkspace() {
                           !getVerificationSummary(selectedOrder).canApprove ||
                           submitting
                         }
-                        className={`rounded-md px-4 py-2 text-sm font-semibold ${
+                        className={`rounded-md px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed ${
                           decision === "APPROVED"
                             ? "bg-green-700 text-white"
                             : "border border-green-700 bg-white text-green-700 hover:bg-green-50"
@@ -667,7 +667,7 @@ export function VerifierWorkspace() {
                       <button
                         type="button"
                         onClick={() => setDecision("REJECTED")}
-                        className={`rounded-md px-4 py-2 text-sm font-semibold ${
+                        className={`rounded-md px-4 py-2 text-sm font-semibold cursor-pointer ${
                           decision === "REJECTED"
                             ? "bg-red-700 text-white"
                             : "border border-red-700 bg-white text-red-700 hover:bg-red-50"
@@ -708,7 +708,7 @@ export function VerifierWorkspace() {
                         type="button"
                         onClick={handleVerificationSubmit}
                         disabled={!decision || submitting}
-                        className="rounded-md bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-gray-400"
+                        className="rounded-md bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800 disabled:cursor-not-allowed cursor-pointer disabled:bg-gray-400"
                       >
                         {submitting ? "Submitting..." : "Submit Verification"}
                       </button>

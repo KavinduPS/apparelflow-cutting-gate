@@ -212,7 +212,7 @@ export async function POST(request: Request, context: RouteContext) {
         wastagePct,
         wastageCap: Number(order.recipe.wastageCap),
       },
-      { status: 409 },
+      { status: 422 },
     );
   }
 

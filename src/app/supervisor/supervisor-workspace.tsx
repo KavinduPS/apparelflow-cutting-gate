@@ -258,13 +258,15 @@ export function SupervisorWorkspace() {
 
   return (
     <section className="w-full max-w-6xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Cutting Orders</h2>
-
-          <p className="mt-1 text-sm text-gray-600">
-            Create and manage cutting orders.
-          </p>
+      <div className="flex items-center justify-between rounded-lg border border-gray-200 bg-white px-6 py-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-1 rounded-full bg-blue-700" />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Cutting Orders</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Create and manage cutting orders.
+            </p>
+          </div>
         </div>
 
         <button

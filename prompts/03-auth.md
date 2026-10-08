@@ -44,6 +44,7 @@ Nothing else changes.
 ## Requirements
 
 **Login endpoint `POST /api/auth/login`**
+
 - Validate the body with Zod: `email` (valid format, trimmed, lowercased) and `password` (non empty string). Invalid input returns 422 with field messages.
 - Look up the user by email. Compare the password with `bcrypt.compare`. If the user does not exist, still run a `bcrypt.compare` against a fixed dummy hash, so response time does not reveal which emails exist.
 - Wrong email or password returns 401 with the message "Invalid email or password".
@@ -52,6 +53,7 @@ Nothing else changes.
 **Logout endpoint `POST /api/auth/logout`** clears the cookie and returns 200.
 
 **Guard helper (`src/lib/auth.ts`)**
+
 - `getSessionUser()`: reads the cookie, verifies the token, loads the user, returns the user or `null`.
 - `requireRole(allowed: Role[])`: returns `{ ok: true, user }` on success, or `{ ok: false, response }` where `response` is 401 when there is no valid session and 403 when the role is not allowed. Routes use it like this:
   ```ts
@@ -61,12 +63,14 @@ Nothing else changes.
 - The module fails fast with a clear error if `JWT_SECRET` is missing or shorter than 32 characters.
 
 **Login page (UI rules from AGENTS.md section 3)**
+
 - Email and password fields with explicit dark text on a white background, visible labels, visible focus ring, `color-scheme: light`.
 - Inline error message under the form on failure.
 - Demo panel lists the three personas with a button each. Plain readable text, not color alone.
 - Layout works on a tablet width.
 
 **Tests (`src/lib/auth.test.ts`, Vitest)**
+
 1. A token signed with the secret verifies and returns the user id.
 2. A token signed with a different secret is rejected.
 3. An expired token is rejected.
@@ -115,9 +119,8 @@ Report the real output of each.
 ## Commit
 
 Use small commits, for example:
+
 - `feat: session token and role guard`
 - `feat: login and logout endpoints`
 - `feat: login page with demo credentials`
 - `test: auth guard unit tests`
-
-Then add any AI mistakes found during this step to `AI_LOG.md`.

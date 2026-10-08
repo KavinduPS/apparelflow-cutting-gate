@@ -40,30 +40,26 @@ export function SewingWorkspace() {
   const [startingOrderId, setStartingOrderId] = useState<number | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<number | null>(null);
 
-  async function loadQueue() {
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await fetch("/api/orders/sewing-queue");
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "Failed to load sewing queue");
-      }
-
-      setOrders(data.orders);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Failed to load sewing queue",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
   useEffect(() => {
+    async function loadQueue() {
+      try {
+        const response = await fetch("/api/orders/sewing-queue");
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error ?? "Failed to load sewing queue");
+        }
+
+        setOrders(data.orders);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to load sewing queue",
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
     loadQueue();
   }, []);
 
@@ -94,11 +90,16 @@ export function SewingWorkspace() {
 
   return (
     <section className="w-full max-w-6xl">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Sewing Queue</h2>
-        <p className="mt-1 text-sm text-gray-600">
-          Verified cutting orders ready to enter sewing.
-        </p>
+      <div className="mb-6 rounded-lg border border-gray-200 bg-white px-6 py-5 shadow-sm">
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-1 rounded-full bg-blue-700" />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">Sewing Queue</h2>
+            <p className="mt-1 text-sm text-gray-600">
+              Verified cutting orders ready to enter sewing.
+            </p>
+          </div>
+        </div>
       </div>
 
       {error && (

@@ -7,6 +7,8 @@ import {
   OrderStatus,
   Role,
 } from "@/generated/prisma/enums";
+import { evaluateItem, wastagePct } from "@/lib/domain/verification";
+import { expectedFabricYards } from "@/lib/domain/expected";
 import { z } from "zod";
 
 const verificationSchema = z
@@ -156,17 +158,7 @@ export async function POST(request: Request, context: RouteContext) {
 
     const actualQty = submitted?.actualQty ?? null;
 
-    let status: ItemStatus;
-
-    if (actualQty === null) {
-      status = ItemStatus.RED;
-    } else if (actualQty < expectedQty) {
-      status = ItemStatus.RED;
-    } else if (actualQty > expectedQty) {
-      status = ItemStatus.YELLOW;
-    } else {
-      status = ItemStatus.GREEN;
-    }
+    const { status } = evaluateItem(actualQty, expectedQty);
 
     return {
       componentId: component.id,
@@ -182,24 +174,15 @@ export async function POST(request: Request, context: RouteContext) {
     (item) => item.status === ItemStatus.RED,
   );
 
-  const expectedFabricYds =
-    Number(order.recipe.stdFabricYards) * order.targetQty;
+  const expectedFabricYds = expectedFabricYards(
+    Number(order.recipe.stdFabricYards),
+    order.targetQty,
+  );
 
-  const wastagePct =
-    expectedFabricYds > 0
-      ? Math.max(
-          0,
-          Number(
-            (
-              ((Number(order.actualFabricYds) - expectedFabricYds) /
-                expectedFabricYds) *
-              100
-            ).toFixed(2),
-          ),
-        )
-      : 0;
+  const wastage =
+    wastagePct(Number(order.actualFabricYds), expectedFabricYds) ?? 0;
 
-  const wastageOverCap = wastagePct > Number(order.recipe.wastageCap);
+  const wastageOverCap = wastage > Number(order.recipe.wastageCap);
 
   if (input.decision === "APPROVED" && (hasRedComponent || wastageOverCap)) {
     return NextResponse.json(
@@ -209,7 +192,7 @@ export async function POST(request: Request, context: RouteContext) {
           ? "One or more components are missing or below the expected quantity"
           : "Fabric wastage exceeds the recipe cap",
         verificationResults,
-        wastagePct,
+        wastagePct: wastage,
         wastageCap: Number(order.recipe.wastageCap),
       },
       { status: 422 },
@@ -253,7 +236,7 @@ export async function POST(request: Request, context: RouteContext) {
         decision,
         rejectionNote:
           input.decision === "REJECTED" ? input.rejectionNote : null,
-        wastagePct,
+        wastagePct: wastage,
         variances: verificationResults,
       },
     });
@@ -269,7 +252,7 @@ export async function POST(request: Request, context: RouteContext) {
       verificationLog: {
         id: verificationLog.id,
         decision: verificationLog.decision,
-        wastagePct: Number(verificationLog.wastagePct),
+        wastagePct: wastage,
         timestamp: verificationLog.timestamp,
       },
     },

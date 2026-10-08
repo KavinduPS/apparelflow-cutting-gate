@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { evaluateItem, wastagePct } from "@/lib/domain/verification";
+import { expectedFabricYards } from "@/lib/domain/expected";
 
 type VerificationItem = {
   id: number;
@@ -120,50 +122,12 @@ export function VerifierWorkspace() {
     );
   }
 
-  function getComponentStatus(item: VerificationItem): {
-    status: "GREEN" | "YELLOW" | "RED";
-    label: string;
-  } {
-    const actualQty = actualQuantities[item.componentId];
-
-    if (actualQty === null || actualQty === undefined) {
-      return {
-        status: "RED",
-        label: "UNCOUNTED",
-      };
-    }
-
-    if (actualQty < item.expectedQty) {
-      return {
-        status: "RED",
-        label: "SHORTAGE",
-      };
-    }
-
-    if (actualQty > item.expectedQty) {
-      return {
-        status: "YELLOW",
-        label: "EXCESS",
-      };
-    }
-
-    return {
-      status: "GREEN",
-      label: "OK",
-    };
-  }
-
   function getWastagePercentage(order: PendingOrder): number {
-    const expectedFabric = order.recipe.stdFabricYards * order.targetQty;
-
-    if (expectedFabric <= 0) {
-      return 0;
-    }
-
-    const wastage =
-      ((order.actualFabricYds - expectedFabric) / expectedFabric) * 100;
-
-    return Math.max(0, Number(wastage.toFixed(2)));
+    const expectedYds = expectedFabricYards(
+      order.recipe.stdFabricYards,
+      order.targetQty,
+    );
+    return wastagePct(order.actualFabricYds, expectedYds) ?? 0;
   }
 
   function getWastageStatus(order: PendingOrder): {
@@ -195,7 +159,10 @@ export function VerifierWorkspace() {
 
   function getVerificationSummary(order: PendingOrder) {
     const statuses = order.verificationItems.map((item) =>
-      getComponentStatus(item),
+      evaluateItem(
+        actualQuantities[item.componentId] ?? null,
+        item.expectedQty,
+      ),
     );
 
     const greenCount = statuses.filter(
@@ -318,6 +285,19 @@ export function VerifierWorkspace() {
         </div>
       )}
       <section className="grid gap-6 lg:grid-cols-[320px_1fr]">
+        <div className="lg:col-span-2 rounded-lg border border-gray-200 bg-white px-6 py-5 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="h-10 w-1 rounded-full bg-blue-700" />
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                Cutting Orders
+              </h2>
+              <p className="mt-1 text-sm text-gray-600">
+                Approve or reject cutting orders.
+              </p>
+            </div>
+          </div>
+        </div>
         <div className="rounded-lg border border-gray-200 bg-white p-5 shadow-sm">
           <div className="flex items-center justify-between">
             <h2 className="text-lg font-semibold text-gray-900">
@@ -525,8 +505,10 @@ export function VerifierWorkspace() {
 
                             <td className="px-4 py-4">
                               {(() => {
-                                const result = getComponentStatus(item);
-
+                                const result = evaluateItem(
+                                  actualQuantities[item.componentId] ?? null,
+                                  item.expectedQty,
+                                );
                                 const statusClasses = {
                                   GREEN: "bg-green-100 text-green-800",
                                   YELLOW: "bg-yellow-100 text-yellow-800",

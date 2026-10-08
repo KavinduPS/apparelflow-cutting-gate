@@ -30,22 +30,24 @@ Out of scope: login, sessions, API routes, UI.
 ## Data
 
 **Recipe A**
+
 - Code `REC-BL01`, name `Casual Blouse`, category `Blouse`
 - Standard fabric 1.8 yards per piece, wastage cap 5.0
 - Components: Front Body Panel 1, Back Body Panel 1, Sleeves (Left & Right) 2, Collar & Stand 1, Sleeve Cuffs 2
 
 **Recipe B**
+
 - Code `REC-CT02`, name `Crop Top`, category `Crop Top`
 - Standard fabric 1.1 yards per piece, wastage cap 8.0
 - Components: Front Chest Panel 1, Back Support Panel 1, Neck Binding Strip 1, Hem Elastic Casing 1, Side Strap Accents 2
 
 **Users**
 
-| Role | Email | Full name |
-|---|---|---|
+| Role                 | Email                         | Full name          |
+| -------------------- | ----------------------------- | ------------------ |
 | `cutting_supervisor` | `supervisor@apparelflow.test` | Cutting Supervisor |
-| `cutting_verifier` | `verifier@apparelflow.test` | Cutting Verifier |
-| `sewing_supervisor` | `sewing@apparelflow.test` | Sewing Supervisor |
+| `cutting_verifier`   | `verifier@apparelflow.test`   | Cutting Verifier   |
+| `sewing_supervisor`  | `sewing@apparelflow.test`     | Sewing Supervisor  |
 
 Demo password for all three: `Demo@1234`, hashed with bcrypt (cost 10 or higher) before saving.
 
@@ -100,5 +102,3 @@ Report the real output of each.
 ## Commit
 
 `feat: seed recipes and demo users`
-
-Then add any AI mistakes found during this step to `AI_LOG.md`.

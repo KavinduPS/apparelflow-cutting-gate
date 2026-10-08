@@ -104,5 +104,3 @@ Report the real output of each.
 ## Commit
 
 `feat: database schema with constraints and rls`
-
-Then add any AI mistakes found during this step to `AI_LOG.md`.
